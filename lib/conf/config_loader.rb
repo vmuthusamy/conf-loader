@@ -1,8 +1,8 @@
 require 'bundler'
 require 'pp'
 require 'csv'
-require_relative 'configuration_loader/override_reconciliation.rb'
-require_relative 'configuration_loader/group_hash.rb'
+require_relative 'conf_loader/override_reconciliation.rb'
+require_relative 'conf_loader/group_hash.rb'
 
 class ConfLoader
   attr_reader :overrides, :file_path
@@ -32,19 +32,21 @@ class ConfLoader
       parse(line)
     end
     load_from_config_store(config_store)
-    pp config_store
   end
 
+  # if overrides are passed in, creates a hash of overrides to its index
+  # in the array, this is to ensure that override with maximum index
+  # value is prioritized in reconciliation
   def rank_overrides(overrides)
-    $overrides_count= Hash[overrides.each_with_index.map {|x,i| [x.to_s, i]}]
+    $overrides_count= Hash[overrides.each_with_index.map {|x,i| [x.to_s, i+1]}]
   end
 
   # core business logic resides in this method.
-  # The idea is to parse each line, figure if its has a [config] associated
+  # The idea is to parse each line, figure if it has a [config] associated
   # if so parse its properties and finally based on the overrides passed in
   # reconcile the correct value to those properties if any of them has multiple
   # configurations.
-  # delegated this to additional helper methods for readability.
+  # Modularized and delegated this to additional helper methods for readability.
   def parse(line)
     line.strip!
     line = remove_comments_from_line(line)
@@ -90,10 +92,10 @@ class ConfLoader
   # once key and values are split it trims the quotes around them
   # if they are strings.
   def parse_key_value(line)
-    res = line.split('=')
-    return nil if res.length != 2
+    parts = line.split('=')
+    return nil if parts.length != 2
 
-    k, v = res.map(&:strip)
+    k, v = parts.map(&:strip)
     v = CSV.parse_line(v).map{|s| removeQuotes(s) }
     v = v.first if v.length == 1
     [k, v]
@@ -103,6 +105,19 @@ class ConfLoader
   def removeQuotes(str)
     str.gsub(/^[\'\"]/, '').gsub(/[\'\"]$/, '')
   end
+
+
+
+  # If not for overrides the logic is relatively small.
+  # This method checks for existence for Config<Overridden>
+  # if there is no override value is simply stored into the
+  # OverrideReconciliation object's value field into the bucket of groupName.
+  # if there is an override present the reconciliation is done
+  # by using the overrides_count hash which was preprocessed earlier
+  # and the OverrideReconciliation
+  # object's override and overridden_value are updated accordingly
+  # and it's stored of the form below
+  # [:group]=>[:propertyKey]=>[OverrideReconciliationObject] is stored in memory
 
   def parse_and_reconcile_overridden_values(key,value,group)
     key, override = parse_key_with_override(key)
@@ -123,24 +138,14 @@ class ConfLoader
     end
   end
 
+  # Looks for PropertyKey<Override> to extract key
+  # and the override individually
   def parse_key_with_override(str)
     pattern = /(?<name>\w+)(\<(?<override>\w+)\>)?/
     matcher   = pattern.match(str)
     raise "unrecognized key format: #{str.inspect}" unless matcher
 
     [matcher[:name], matcher[:override]].compact
-  end
-
-  def config_store
-    @storage ||= Hash.new { |hash, key| hash[key] = {} }
-  end
-
-  def get_value(key,group)
-    config_store[group][key]
-  end
-
-  def set_value(key, value,group)
-    config_store[group][key] = value
   end
 
   def extract_value(val)
@@ -162,6 +167,12 @@ class ConfLoader
     val
   end
 
+  # Recursive helper to extract the
+  # [:group]=>[:propertyKey]=>[OverrideReconciliationObject]
+  # into a config object which can be queried.
+  # The logic ascertains if its a Hash or an Object if it's an hash
+  # its value is passed recursively or if its an OverrideReconciliation
+  # object its overridden value is extracted.
   def load_from_config_store(hash)
     hash.each_with_object(GroupHash.new) do |(key, value), memo|
       memo[key.to_sym] = case value
@@ -176,18 +187,17 @@ class ConfLoader
   end
 
 
-
-end
-
-def load_config(file_path, overrides = [])
-
-  if file_path.nil? or not File.exist?(file_path)
-    raise 'Please specify a valid file path: ' << file_path
+  def config_store
+    @memory ||= Hash.new { |hash, key| hash[key] = {} }
   end
 
-  ConfLoader.new(file_path, overrides).process
+  def get_value(key,group)
+    config_store[group][key]
+  end
+
+  def set_value(key, value,group)
+    config_store[group][key] = value
+  end
+
 end
 
-
-
-CONFIG= load_config('../srv/settings.conf',['ubuntu', :production])
