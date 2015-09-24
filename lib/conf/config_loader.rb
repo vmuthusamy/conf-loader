@@ -64,7 +64,7 @@ class ConfLoader
     end
   end
 
-  # replace ; with white space
+  # replace anything starting with ; with white space
   def remove_comments_from_line(line)
     line.gsub(/;.*$/, '')
   end
