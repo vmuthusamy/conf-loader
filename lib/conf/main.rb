@@ -16,6 +16,6 @@ def load_config(file_path, overrides = [])
   ConfLoader.new(file_path, overrides).process
 end
 
-CONFIG= load_config('../srv/settings.conf',['staging'])
+CONFIG= load_config('../srv/settings.conf',['ubuntu','production'])
 
-pp CONFIG
+#pp CONFIG
