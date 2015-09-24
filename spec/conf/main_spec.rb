@@ -47,7 +47,7 @@ describe Loader do
     Loader.load_config('srv/settings.conf',[])
   end
 
-  it 'has valid expected overridden properties' do
+  it 'has valid expected default properties' do
     expect(config_no_overrides.common.paid_users_size_limit).to eq(2147483648)
     expect(config_no_overrides.ftp.name).to eq("hello there, ftp uploading")
     expect(config_no_overrides.http.params).to eq(["array", "of", "values"])
