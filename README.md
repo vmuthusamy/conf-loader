@@ -22,7 +22,11 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+This project parses the conf files and presents them as an object which can be used for querying.
+
+The entry point into the application is Loader class which resides in main.rb. It calls into a delegate
+
+method which does the heavy lifting.
 
 ## Development
 
