@@ -7,19 +7,27 @@ describe Loader do
     expect{Loader.load_config('../srv/settings.conf',['ubuntu','production'])}.to raise_error(RuntimeError)
   end
 
-  let(:config) do
-    Loader.load_config('srv/settings.conf',['ubuntu','production'])
-  end
-
-  let(:config_no_overrides) do
-    Loader.load_config('srv/settings.conf',[])
-  end
 
   it 'throws exception when invalid entry is present in conf file' do
     expect{Loader.load_config('srv/invalid-settings.conf',['ubuntu','production'])}.to raise_error{RuntimeError}
 
   end
 
+  it 'throws exception when group name contains a space' do
+    expect{Loader.load_config('srv/group-name-with-space.conf',['ubuntu','production'])}.to raise_error{RuntimeError}
+
+  end
+
+
+  it 'throws exception when group name contains a space' do
+    expect{Loader.load_config('srv/settings-with-invalid-property.conf',['ubuntu','production'])}.to raise_error{RuntimeError}
+
+  end
+
+
+  let(:config) do
+    Loader.load_config('srv/settings.conf',['ubuntu','production'])
+  end
 
   it 'has valid expected overridden properties' do
     expect(config.common.paid_users_size_limit).to eq(2147483648)
@@ -35,6 +43,10 @@ describe Loader do
     expect(config.http)
   end
 
+  let(:config_no_overrides) do
+    Loader.load_config('srv/settings.conf',[])
+  end
+
   it 'has valid expected overridden properties' do
     expect(config_no_overrides.common.paid_users_size_limit).to eq(2147483648)
     expect(config_no_overrides.ftp.name).to eq("hello there, ftp uploading")
@@ -47,7 +59,5 @@ describe Loader do
     expect(config_no_overrides.ftp.lastname).to eq nil
     expect(config_no_overrides.http.path).to eq("/tmp/")
   end
-
-
 
 end
