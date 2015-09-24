@@ -60,7 +60,7 @@ class ConfLoader
       k,v=kv_pair_obj
       parse_and_reconcile_overridden_values(k,v,$group_name)
     else
-      raise 'unrecognized EOF' << line
+      raise 'unrecognized format' << line
     end
   end
 
