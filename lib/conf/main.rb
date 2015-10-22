@@ -17,6 +17,7 @@ class Loader
 end
 
 #uncomment to run this class manually
-#CONFIG= Loader.load_config('srv/settings.conf',[])
+
+CONFIG= Loader.load_config('srv/settings.conf',['ubuntu','production'])
 
 #pp CONFIG

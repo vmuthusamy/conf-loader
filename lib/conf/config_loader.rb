@@ -32,6 +32,7 @@ class ConfLoader
       parse(line)
     end
     load_from_config_store(config_store)
+    pp config_store
   end
 
   # if overrides are passed in, creates a hash of overrides to its index
