@@ -22,7 +22,7 @@ Or install it yourself as:
 
 ## Usage
 
-This project parses the conf files and presents them as an object which can be used for querying.
+This project parses the conf files and presents them as an object which can be used for querying. Please refer the Challenge.pdf file in the repository for more detailed documentation on the requirements.
 
 The entry point into the application is Loader class which resides in main.rb. It calls into a delegate
 
